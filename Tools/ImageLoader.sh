@@ -74,17 +74,17 @@ do
 	shift
 done
 
-_ENV="${_ENVFOLDER}/OpenStackRC/openstackrc"
-ls "${_ENV}" >/dev/null 2>&1 || exit_for_error "Environment path is not valid - ${_ENV}" false hard
+_OPENSTACKRC="${_ENVFOLDER}/OpenStackRC/openstackrc"
+ls "${_OPENSTACKRC}" >/dev/null 2>&1 || exit_for_error "Environment path is not valid - ${_ENVFOLDER}" false hard
 
 if [[ "${_IMAGEFOLDER}" == "" ]]
 then
 	exit_for_error "Missing Image Folder path" false hard
 else
-	ls "${_IMAGEFOLDER}" >/dev/null 2>&1 || exit_for_error "Image path is not valid - ${_ENV}" false hard
+	ls "${_IMAGEFOLDER}" >/dev/null 2>&1 || exit_for_error "Image path is not valid" false hard
 	if [[ "$(ls ${_IMAGEFOLDER})" == "" ]]
 	then
-		exit_for_error "Image path is empty - ${_ENV}" false hard
+		exit_for_error "Image path is empty" false hard
 	fi
 fi
 
@@ -92,7 +92,7 @@ for _BASHENV in $(env|grep ^OS|awk -F "=" '{print $1}')
 do
         unset ${_BASHENV}
 done
-source ${_ENV}
+source ${_OPENSTACKRC}
 
 for _IMAGE in $(ls ${_IMAGEFOLDER})
 do

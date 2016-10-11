@@ -76,8 +76,8 @@ do
 	shift
 done
 
-_ENV="${_ENVFOLDER}/OpenStackRC/openstackrc"
-ls "${_ENV}" >/dev/null 2>&1 || exit_for_error "Environment path is not valid - ${_ENV}" false hard
+_OPENSTACKRC="${_ENVFOLDER}/OpenStackRC/openstackrc"
+ls "${_OPENSTACKRC}" >/dev/null 2>&1 || exit_for_error "Environment path is not valid - ${_ENVFOLDER}" false hard
 
 if [[ "${_VMID}" == "" ]]
 then
@@ -97,7 +97,7 @@ for _BASHENV in $(env|grep ^OS|awk -F "=" '{print $1}')
 do
         unset ${_BASHENV}
 done
-source ${_ENV}
+source ${_OPENSTACKRC}
 
 _TMPSNAPSHOTNAME=$(echo tmp-$(date "+%Y%m%d%H%M%S"))
 _VMNAME=$(echo "${_VMSTATUS}"|awk '/ name / {print $4}'|sed "s/ //g")
