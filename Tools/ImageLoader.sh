@@ -94,14 +94,20 @@ for _IMAGE in $(ls ${_IMAGEFOLDER})
 do
 	_IMAGEMD5=$(md5sum ${_IMAGEFOLDER}/${_IMAGE}|awk '{print $1}')
 	#TODO - Support multiple image type using file or qemu-img info
-	_IMAGEOUTPUT=$(glance image-create \
-		--file ${_IMAGEFOLDER}/${_IMAGE} \
-		--name $(echo ${_IMAGE}|sed -e "s/\.qcow2//g" -e "s/\.img//g" -e "s/\.iso//g") \
-		--disk-format qcow2 \
-		--container-format bare || exit_for_error "Error upload image - ${_IMAGE}" false hard) >/dev/null 2>&1
-	if [[ "$(echo "${_IMAGEOUTPUT}"|awk '/ checksum / {print $4}')" != "${_IMAGEMD5}" ]]
+	_IMAGENAME=$(echo ${_IMAGE}|sed -e "s/\.qcow2//g" -e "s/\.img//g" -e "s/\.iso//g")
+	_IMAGEEXIST=$(glance image-show ${_IMAGENAME}) >/dev/null 2>&1
+	# Try to avoid to load two images with the same name
+	if [[ "${_IMAGEEXIST}" == "" ]] && [[ "$(echo "${_IMAGEEXIST}"|awk '/ checksum / {print $4}')" != "${_IMAGEMD5}" ]]
 	then
-		exit_for_error "Error validating the image ${_IMAGE} checksum"
+		_IMAGEOUTPUT=$(glance image-create \
+			--file ${_IMAGEFOLDER}/${_IMAGE} \
+			--name ${_IMAGENAME} \
+			--disk-format qcow2 \
+			--container-format bare || exit_for_error "Error upload image - ${_IMAGE}" false hard) >/dev/null 2>&1
+		if [[ "$(echo "${_IMAGEOUTPUT}"|awk '/ checksum / {print $4}')" != "${_IMAGEMD5}" ]]
+		then
+			exit_for_error "Error validating the image ${_IMAGE} checksum"
+		fi
 	fi
 done
 exit 0
