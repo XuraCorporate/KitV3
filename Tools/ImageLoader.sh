@@ -95,9 +95,9 @@ do
 	_IMAGEMD5=$(md5sum ${_IMAGEFOLDER}/${_IMAGE}|awk '{print $1}')
 	#TODO - Support multiple image type using file or qemu-img info
 	_IMAGENAME=$(echo ${_IMAGE}|sed -e "s/\.qcow2//g" -e "s/\.img//g" -e "s/\.iso//g")
-	_IMAGEEXIST=$(glance image-show ${_IMAGENAME} 2>/dev/null)
+	_IMAGEEXIST=$(glance image-show $(glance image-list|awk '/ '${_IMAGENAME}' / {print $2}') 2>/dev/null)
 	# Try to avoid to load two images with the same name
-	if [[ "${_IMAGEEXIST}" == "" ]] && [[ "$(echo "${_IMAGEEXIST}"|awk '/ checksum / {print $4}')" != "${_IMAGEMD5}" ]]
+	if [[ "$(echo "${_IMAGEEXIST}"|awk '/ checksum / {print $4}')" != "${_IMAGEMD5}" ]]
 	then
 		_IMAGEOUTPUT=$(glance image-create \
 			--file ${_IMAGEFOLDER}/${_IMAGE} \
