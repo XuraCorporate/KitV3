@@ -86,6 +86,10 @@ else
 	then
 		exit_for_error "Image path is empty" false hard
 	fi
+	if [[ "$(find ${_IMAGEFOLDER} -type d -not -path ${_IMAGEFOLDER})" != "" ]]
+	then
+		exit_for_error "Image path has subdirectory" false hard
+	fi
 fi
 
 for _BASHENV in $(env|grep ^OS|awk -F "=" '{print $1}')
