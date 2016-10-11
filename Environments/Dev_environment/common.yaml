@@ -1,0 +1,221 @@
+---
+parameter_defaults:
+  dev_mode: False
+
+  # Deprecated usage of Tenant Network
+  # Tenant Network Section
+  ##tenant_network_name: TenantNet
+  ##tenant_network_cird: "172.16.0.0/23"
+  ##tenant_network_dhcp_start: "172.16.0.10" # Left some IP Address for future usage, e.g. Static Routes
+  ##tenant_network_dhcp_end: "172.16.1.254"
+  ##tenant_security_group_name: TenantSecGroup
+
+  #keypair_name: xura-key
+
+  # Domain Name
+  # It could be a domain name or "none" which will remove the Domain configuration
+  # Place a dot before the domain, it has to be like this ".xura.com"
+  domain_name: none
+
+  # Generic Security Group that opens all of the communication
+  generic_security_group_name: NoFiltering
+
+  # Unit Name
+  # After the VM creation it will be <UnitName><Index> e.g. vm-asu01
+  # _unit_name: Name of the Unit
+  # _enable_suffix_index_unit_name: Enable the N digit suffix, true or false
+  # _suffix_index_unit_name: Number of digits, like 4
+  # _append_static_letter_index_unit_name: static string before the Alphabet Numbers, could be either a number or a string without any limit
+  # _append_letter_index_unit_name: Alphabet Numbers using the unit index, cab ne true or false and the result will be the translation from the unit index to the Alphabet (base26 from a to z)
+  cms_unit_name: V1VTUS001XUR-CMS-SIP
+  cms_enable_suffix_index_unit_name: false
+  cms_suffix_index_unit_name: 4
+  cms_append_static_letter_index_unit_name: none
+  cms_append_letter_index_unit_name: false
+  lvu_unit_name: V1VTUS001XUR-LVU
+  lvu_enable_suffix_index_unit_name: false
+  lvu_suffix_index_unit_name: 4
+  lvu_append_static_letter_index_unit_name: none
+  lvu_append_letter_index_unit_name: false
+  omu_unit_name: V1VTUS001XUR-OMU-AU
+  omu_enable_suffix_index_unit_name: false
+  omu_suffix_index_unit_name: 4
+  omu_append_static_letter_index_unit_name: none
+  omu_append_letter_index_unit_name: false
+  vm-asu_unit_name: V1VTUS001XUR-VM-ASU
+  vm-asu_enable_suffix_index_unit_name: false
+  vm-asu_suffix_index_unit_name: 4
+  vm-asu_append_static_letter_index_unit_name: none
+  vm-asu_append_letter_index_unit_name: false
+  mau_unit_name: V1VTUS001XUR-MAU
+  mau_enable_suffix_index_unit_name: false
+  mau_suffix_index_unit_name: 4
+  mau_append_static_letter_index_unit_name: none
+  mau_append_letter_index_unit_name: false
+  dsu_unit_name: V1VTUS001XUR-DSU
+  dsu_enable_suffix_index_unit_name: false
+  dsu_suffix_index_unit_name: 4
+  dsu_append_static_letter_index_unit_name: none
+  dsu_append_letter_index_unit_name: false
+  smu_unit_name: V1VTUS001XUR-SMU
+  smu_enable_suffix_index_unit_name: false
+  smu_suffix_index_unit_name: 4
+  smu_append_static_letter_index_unit_name: 1
+  smu_append_letter_index_unit_name: true
+
+  # DSU enable Volume attachment - For Tenant1
+  dsu_persistent_volume_mount: true
+  dsu_persistent_volume_size: 100
+
+  # Enable or disable the server group policy
+  cms_server_group_enable: false
+  lvu_server_group_enable: false
+  omu_server_group_enable: false
+  vm-asu_server_group_enable: false
+  mau_server_group_enable: false
+  dsu_server_group_enable: false
+  smu_server_group_enable: false
+
+  # Server Group Policy, has to be "affinity" or "anti-affinity"
+  cms_server_group_policy: anti-affinity
+  lvu_server_group_policy: anti-affinity
+  omu_server_group_policy: anti-affinity
+  vm-asu_server_group_policy: anti-affinity
+  mau_server_group_policy: anti-affinity
+  dsu_server_group_policy: anti-affinity
+  smu_server_group_policy: anti-affinity
+
+  # Count for Server Groups per Unit
+  cms_server_group_quantity: 2
+  lvu_server_group_quantity: 1
+  omu_server_group_quantity: 1
+  vm-asu_server_group_quantity: 1
+  mau_server_group_quantity: 1
+  dsu_server_group_quantity: 1
+  smu_server_group_quantity: 1
+
+  # Admin Network Section
+  admin_network_name: "provider2"
+  admin_network_cidr: "10.107.154.0/24"
+  admin_network_netmask: "255.255.255.0"
+  admin_network_gateway: "10.107.154.1"
+  admin_security_group_enabled: true
+  admin_security_group_name: AdminSecGroup
+  # "none" will disable the VLAN configuration, a number between 1 to 4096 will configure the vlan taggin
+  admin_network_vlan: none
+  admin_network_mtu: 1400
+
+  # Secure Zone Network Section 
+  sz_network_name: "provider1"
+  sz_network_cidr: "10.107.153.0/24"
+  sz_network_netmask: "255.255.255.0"
+  sz_security_group_enabled: true
+  # With OpenStaqck liberty a security group is necessary in order to have network communications - in production this will be an SR-IOV port but for testing purpose it is required 
+  sz_security_group_name: NoFiltering
+  # "none" will disable the VLAN configuration, a number between 1 to 4096 will configure the vlan taggin
+  sz_network_vlan: none
+  sz_network_mtu: 1400
+
+  # SIP Internal Network Section
+  sip_network_name: "integ-NET-SIP-Internal"
+  sip_network_cidr: "172.17.27.0/27"
+  sip_network_netmask: "255.255.255.224"
+  sip_security_group_enabled: true
+  # With OpenStaqck liberty a security group is necessary in order to have network communications - in production this will be an SR-IOV port but for testing purpose it is required
+  sip_security_group_name: NoFiltering
+  # "none" will disable the VLAN configuration, a number between 1 to 4096 will configure the vlan taggin
+  sip_network_vlan: none
+  sip_network_mtu: 1400
+
+  # Media Network Section
+  media_network_name: "integ-NET-SZ-Internal"
+  media_network_cidr: "172.17.26.0/26"
+  media_network_netmask: "255.255.255.192"
+  media_network_gateway: "172.17.26.1" # For CMS
+  media_security_group_enabled: true
+  # With OpenStaqck liberty a security group is necessary in order to have network communications - in production this will be an SR-IOV port but for testing purpose it is required
+  media_security_group_name: NoFiltering
+  # "none" will disable the VLAN configuration, a number between 1 to 4096 will configure the vlan taggin
+  media_network_vlan: none
+  media_network_mtu: 1400
+
+  # Flavor Section
+  cms_flavor_name: m1.xlarge
+  lvu_flavor_name: m1.xlarge
+  omu_flavor_name: m1.xlarge
+  vm-asu_flavor_name: m1.xlarge
+  mau_flavor_name: m1.xlarge
+  dsu_flavor_name: m1.xlarge.swap
+  smu_flavor_name: m1.xlarge.swap
+
+  # Source Image to be used for the VM boot.
+  # The Image can come from a Glance Image or from a Cinder Volume.
+  # Choose "glance" or "cinder"
+  # In case Cinder will be chosen boot in Local Disk from a Cinder Volume is not supported by OpenStack
+  cms_image_source: glance
+  lvu_image_source: glance
+  omu_image_source: glance
+  vm-asu_image_source: glance
+  mau_image_source: glance
+  dsu_image_source: glance
+  smu_image_source: glance
+
+  # Nova and Cinder Availability Zone
+  nova_az: nova
+  cinder_az: nova
+
+  #####
+  # Glance Source Section
+  # *_local_boot: VM Boot from Local Disk instead of using Cinder for Boot from Volume
+  # *_image_volume_size: Volume Size in GB without the Unit
+  # *_image_id: Glance Image ID
+  # *_image: Glance Image Name
+  ####
+  cms_local_boot: True
+  cms_image_volume_size: 20
+  cms_image_id: 2671f8fa-54fb-44c1-a984-afe15aaf25f4 #LP: https://bugs.launchpad.net/heat/+bug/1559186
+  cms_image: swp-RedHat-Linux-OS-KVM-1.1.0.0-02_6.6.1.0-01
+  lvu_local_boot: True
+  lvu_image_volume_size: 20
+  lvu_image_id: 2671f8fa-54fb-44c1-a984-afe15aaf25f4 #LP: https://bugs.launchpad.net/heat/+bug/1559186
+  lvu_image: swp-RedHat-Linux-OS-KVM-1.1.0.0-02_6.6.1.0-01
+  omu_local_boot: True
+  omu_image_volume_size: 20
+  omu_image_id: 2671f8fa-54fb-44c1-a984-afe15aaf25f4 #LP: https://bugs.launchpad.net/heat/+bug/1559186
+  omu_image: swp-RedHat-Linux-OS-KVM-1.1.0.0-02_6.6.1.0-01
+  vm-asu_local_boot: True
+  vm-asu_image_volume_size: 20
+  vm-asu_image_id: 2671f8fa-54fb-44c1-a984-afe15aaf25f4 #LP: https://bugs.launchpad.net/heat/+bug/1559186
+  vm-asu_image: swp-RedHat-Linux-OS-KVM-1.1.0.0-02_6.6.1.0-01
+  mau_local_boot: True
+  mau_image_volume_size: 20
+  mau_image_id: 8875aae0-c21a-420a-aa71-11031ca65c62 #LP: https://bugs.launchpad.net/heat/+bug/1559186
+  mau_image: XURA_Mau_1.0.0.0_02
+  dsu_local_boot: True
+  dsu_image_volume_size: 20
+  dsu_image_id: 2671f8fa-54fb-44c1-a984-afe15aaf25f4 #LP: https://bugs.launchpad.net/heat/+bug/1559186
+  dsu_image: swp-RedHat-Linux-OS-KVM-1.1.0.0-02_6.6.1.0-01
+  smu_local_boot: True
+  smu_image_volume_size: 20
+  smu_image_id: 2671f8fa-54fb-44c1-a984-afe15aaf25f4 #LP: https://bugs.launchpad.net/heat/+bug/1559186
+  smu_image: swp-RedHat-Linux-OS-KVM-1.1.0.0-02_6.6.1.0-01
+
+  #####
+  # Cinder Source Section
+  # Size in GB without the Unit
+  ####
+  cms_volume_id: d8842665-3408-42d6-9ae8-78468b8b39a9
+  cms_volume_size: 8
+  lvu_volume_id: d8842665-3408-42d6-9ae8-78468b8b39a9
+  lvu_volume_size: 8
+  omu_volume_id: d8842665-3408-42d6-9ae8-78468b8b39a9
+  omu_volume_size: 8
+  vm-asu_volume_id: d8842665-3408-42d6-9ae8-78468b8b39a9
+  vm-asu_volume_size: 8
+  mau_volume_id: d8842665-3408-42d6-9ae8-78468b8b39a9
+  mau_volume_size: 8
+  dsu_volume_id: d8842665-3408-42d6-9ae8-78468b8b39a9
+  dsu_volume_size: 8
+  smu_volume_id: d8842665-3408-42d6-9ae8-78468b8b39a9
+  smu_volume_size: 8
+
