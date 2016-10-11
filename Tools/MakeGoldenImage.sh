@@ -25,7 +25,7 @@ function exit_for_error {
         #####
         _EXIT=${3-hard}
 	_EXEC=${4-true}
-	${_EXEC}
+	${_EXEC} >/dev/null 2>&1
         if ${_CHANGEDIR} && [[ "${_EXIT}" == "hard" ]]
         then
                 cd ${_CURRENTDIR}
@@ -83,7 +83,7 @@ if [[ "${_VMID}" == "" ]]
 then
 	exit_for_error "Missing VM UUID/Name - ${_VMID}" false hard
 else
-	_VMSTATUS=$(nova show ${_VMID} 2>dev/null)
+	_VMSTATUS=$(nova show ${_VMID} 2>/dev/null)
 	if [[ "${_VMSTATUS}" == "" ]]
 	then
 		exit_for_error "Invalid VM UUID/Name - ${_VMID}" false hard
@@ -99,22 +99,23 @@ do
 done
 source ${_ENV}
 
-_TMPSNAPSHOTNAME=$(tmp-$(date "+%Y%m%d%H%M%S"))
-mkdir ${_TMPSNAPSHOTNAME}
-_VMAME=$(echo "${_VMSTATUS}"|awk '/ name / {print $4}'|sed "s/ //g")
-nova image-create ${_VMID} ${_TMPSNAPSHOTNAME} >/dev/null 2>&1||exit_for_error "Error Snapshotting the VM ${_VMID}" false hard
+_TMPSNAPSHOTNAME=$(echo tmp-$(date "+%Y%m%d%H%M%S"))
+_VMNAME=$(echo "${_VMSTATUS}"|awk '/ name / {print $4}'|sed "s/ //g")
+
+nova image-create ${_VMID} ${_TMPSNAPSHOTNAME}||exit_for_error "Error Snapshotting the VM ${_VMID}" false hard
 _SNAPSHOTID=$(glance image-list|awk '/ '${_TMPSNAPSHOTNAME}' / {print $2}')
 while :; do glance image-show ${_SNAPSHOTID}|awk '/ status / {print $4}'|grep "active" && break; done >/dev/null 2>&1 
-glance image-download ${_SNAPSHOTID} --file ./${_TMPSNAPSHOTNAME}/tmp >/dev/null 2>&1\
+mkdir tmp
+glance image-download ${_SNAPSHOTID} --file ./tmp/tmp >/dev/null 2>&1\
 	||exit_for_error "Error downloading the snapshot for ${_VMID}" false hard \
-	"rm -f ${_TMPSNAPSHOTNAME}.tmp >/dev/null 2>&1; glance image-delete ${_SNAPSHOTID} >/dev/null 2>&1"
-qemu-img convert -c -q -f qcow2 -O qcow2 ./${_TMPSNAPSHOTNAME}/tmp ./${_TMPSNAPSHOTNAME}/new
-rm -f ./${_TMPSNAPSHOTNAME}/tmp
-mv ./${_TMPSNAPSHOTNAME}/new ./${_TMPSNAPSHOTNAME}/${_VMNAME}
+	"rm -fr ./tmp ; glance image-delete ${_SNAPSHOTID}" 
+qemu-img convert -c -q -f qcow2 -O qcow2 ./tmp/tmp ./tmp/${_VMNAME}
 
-bash Tools/ImageLoader.sh --env ${_ENVFOLDER} -i ./${_TMPSNAPSHOTNAME}
+glance image-delete ${_SNAPSHOTID}
+rm -f ./tmp/tmp
 
-rm -f ./${_TMPSNAPSHOTNAME}/${_VMNAME}
-rm -rf ./${_TMPSNAPSHOTNAME}
+bash Tools/ImageLoader.sh --env ${_ENVFOLDER} -i tmp/
+
+rm -rf ./tmp
 
 exit 0
