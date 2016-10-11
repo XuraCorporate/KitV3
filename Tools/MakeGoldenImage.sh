@@ -77,11 +77,11 @@ do
 done
 
 _OPENSTACKRC="${_ENVFOLDER}/OpenStackRC/openstackrc"
-ls "${_OPENSTACKRC}" >/dev/null 2>&1 || exit_for_error "Environment path is not valid - ${_ENVFOLDER}" false hard
+ls "${_OPENSTACKRC}" >/dev/null 2>&1 || exit_for_error "Environment path is not valid ${_ENVFOLDER}" false hard
 
 if [[ "${_VMID}" == "" ]]
 then
-	exit_for_error "Missing VM UUID/Name - ${_VMID}" false hard
+	exit_for_error "Missing VM UUID/Name ${_VMID}" false hard
 else
 	_VMSTATUS=$(nova show ${_VMID} 2>/dev/null)
 	if [[ "${_VMSTATUS}" == "" ]]

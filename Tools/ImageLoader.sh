@@ -75,7 +75,7 @@ do
 done
 
 _OPENSTACKRC="${_ENVFOLDER}/OpenStackRC/openstackrc"
-ls "${_OPENSTACKRC}" >/dev/null 2>&1 || exit_for_error "Environment path is not valid - ${_ENVFOLDER}" false hard
+ls "${_OPENSTACKRC}" >/dev/null 2>&1 || exit_for_error "Environment path is not valid ${_ENVFOLDER}" false hard
 
 if [[ "${_IMAGEFOLDER}" == "" ]]
 then
