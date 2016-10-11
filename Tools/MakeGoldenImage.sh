@@ -24,6 +24,8 @@ function exit_for_error {
         # If soft no exit
         #####
         _EXIT=${3-hard}
+	_EXEC=${4-true}
+	${_EXEC}
         if ${_CHANGEDIR} && [[ "${_EXIT}" == "hard" ]]
         then
                 cd ${_CURRENTDIR}
@@ -54,14 +56,14 @@ do
 	    		_ENVFOLDER="$2"
 	    		shift
 	    		;;
-		-i|--image)
-	    		_IMAGEFOLDER="$2"
+		-s|--source)
+	    		_VMID="$2"
 	    		shift
 	    		;;
 		-h|--help)
-			echo "Help for Image Loader Script"
+			echo "Help for Golden Image Creator"
 			echo "-e|--env <envirnment folder - e.g Environments/Dev_environment>"
-			echo "-i|--image <image folder - e.g Images/Dev>"
+			echo "-s|--source <nova image uuid or name - e.g. e59bd794-08c8-41ff-8b2a-dede6fbc06a0 or V1VTUS001XUR-SMU1A>"
 			echo "-h|--help"
 			exit 0
 			shift
@@ -77,14 +79,17 @@ done
 _ENV="${_ENVFOLDER}/OpenStackRC/openstackrc"
 ls "${_ENV}" >/dev/null 2>&1 || exit_for_error "Environment path is not valid - ${_ENV}" false hard
 
-if [[ "${_IMAGEFOLDER}" == "" ]]
+if [[ "${_VMID}" == "" ]]
 then
-	exit_for_error "Missing Image Folder path" false hard
+	exit_for_error "Missing VM UUID/Name - ${_VMID}" false hard
 else
-	ls "${_IMAGEFOLDER}" >/dev/null 2>&1 || exit_for_error "Image path is not valid - ${_ENV}" false hard
-	if [[ "$(ls ${_IMAGEFOLDER})" == "" ]]
+	_VMSTATUS=$(nova show ${_VMID} 2>dev/null)
+	if [[ "${_VMSTATUS}" == "" ]]
 	then
-		exit_for_error "Image path is empty - ${_ENV}" false hard
+		exit_for_error "Invalid VM UUID/Name - ${_VMID}" false hard
+	elif [[ "$(echo ${_VMSTATUS}|awk '/ OS-EXT-STS:task_state / {print $4}')" == "-" ]]
+	then
+		exit_for_error "The given VM ${_VMID} has an invalid task state" false hard
 	fi
 fi
 
@@ -94,24 +99,22 @@ do
 done
 source ${_ENV}
 
-for _IMAGE in $(ls ${_IMAGEFOLDER})
-do
-	_IMAGEMD5=$(md5sum ${_IMAGEFOLDER}/${_IMAGE}|awk '{print $1}')
-	#TODO - Support multiple image type using file or qemu-img info
-	_IMAGENAME=$(echo ${_IMAGE}|sed -e "s/\.qcow2//g" -e "s/\.img//g" -e "s/\.iso//g")
-	_IMAGEEXIST=$(glance image-show $(glance image-list|awk '/ '${_IMAGENAME}' / {print $2}') 2>/dev/null)
-	# Try to avoid to load two images with the same name
-	if [[ "$(echo "${_IMAGEEXIST}"|awk '/ checksum / {print $4}')" != "${_IMAGEMD5}" ]]
-	then
-		_IMAGEOUTPUT=$(glance image-create \
-			--file ${_IMAGEFOLDER}/${_IMAGE} \
-			--name ${_IMAGENAME} \
-			--disk-format qcow2 \
-			--container-format bare || exit_for_error "Error upload image - ${_IMAGE}" false hard) >/dev/null 2>&1
-		if [[ "$(echo "${_IMAGEOUTPUT}"|awk '/ checksum / {print $4}')" != "${_IMAGEMD5}" ]]
-		then
-			exit_for_error "Error validating the image ${_IMAGE} checksum"
-		fi
-	fi
-done
+_TMPSNAPSHOTNAME=$(tmp-$(date "+%Y%m%d%H%M%S"))
+mkdir ${_TMPSNAPSHOTNAME}
+_VMAME=$(echo "${_VMSTATUS}"|awk '/ name / {print $4}'|sed "s/ //g")
+nova image-create ${_VMID} ${_TMPSNAPSHOTNAME} >/dev/null 2>&1||exit_for_error "Error Snapshotting the VM ${_VMID}" false hard
+_SNAPSHOTID=$(glance image-list|awk '/ '${_TMPSNAPSHOTNAME}' / {print $2}')
+while :; do glance image-show ${_SNAPSHOTID}|awk '/ status / {print $4}'|grep "active" && break; done >/dev/null 2>&1 
+glance image-download ${_SNAPSHOTID} --file ./${_TMPSNAPSHOTNAME}/tmp >/dev/null 2>&1\
+	||exit_for_error "Error downloading the snapshot for ${_VMID}" false hard \
+	"rm -f ${_TMPSNAPSHOTNAME}.tmp >/dev/null 2>&1; glance image-delete ${_SNAPSHOTID} >/dev/null 2>&1"
+qemu-img convert -c -q -f qcow2 -O qcow2 ./${_TMPSNAPSHOTNAME}/tmp ./${_TMPSNAPSHOTNAME}/new
+rm -f ./${_TMPSNAPSHOTNAME}/tmp
+mv ./${_TMPSNAPSHOTNAME}/new ./${_TMPSNAPSHOTNAME}/${_VMNAME}
+
+bash Tools/ImageLoader.sh --env ${_ENVFOLDER} -i ./${_TMPSNAPSHOTNAME}
+
+rm -f ./${_TMPSNAPSHOTNAME}/${_VMNAME}
+rm -rf ./${_TMPSNAPSHOTNAME}
+
 exit 0
