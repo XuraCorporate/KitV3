@@ -98,4 +98,13 @@ then
 	exit 1
 fi
 
+#####
+# Exec UnitFeaturesValidation
+#####
+bash ./Tools/UnitFeaturesValidation.sh --env ${_ENVFOLDER}
+if [[ "$?" != "0" ]]
+then
+	exit 1
+fi
+
 exit 0

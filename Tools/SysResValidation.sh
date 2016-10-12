@@ -80,6 +80,19 @@ then
         exit_for_error "Error, Environment file is missing." false hard
 fi
 
+#####
+# Unload any previous loaded environment file
+#####
+for _BASHENV in $(env|grep ^OS|awk -F "=" '{print $1}')
+do
+        unset ${_BASHENV}
+done
+
+#####
+# Load environment file
+#####
+source ${_OPENSTACKRC}
+
 _CMSFLAVOR=$(cat ${_ENV}|awk '/cms_flavor_name/ {print $2}'|sed "s/\"//g")
 _CMSFLAVOROUTPUT=$(nova flavor-show ${_CMSFLAVOR})
 _CMSVCPU=$(echo "${_CMSFLAVOROUTPUT}"|grep " vcpus "|awk '{print $4}')

@@ -45,33 +45,33 @@ function exit_for_error {
 }
 
 function csv_validation {
-        echo -e -n "   - Verifying unit $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }') CSV file ${_CSV} ...\t\t"
+        #echo -e -n "   - Verifying unit $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }') CSV file ${_CSV} ...\t\t"
         if [ ! -f ${_CSV} ] || [ ! -r ${_CSV} ] || [ ! -s ${_CSV} ]
         then
                 exit_for_error "CSV File ${_CSV} Network with mapping PortID,MacAddress,FixedIP does not exist." false soft
         fi
-        echo -e "${GREEN} [OK]${NC}"
+        #echo -e "${GREEN} [OK]${NC}"
 }
 
 function net_validation {
         _NET=$1
         _NAME=$2
-        _NETWORK=$(cat ../${_ENV}|awk '/'${_NET}'_network_name/ {print $2}'|sed "s/\"//g")
-        _VLAN=$(cat ../${_ENV}|awk '/'${_NET}'_network_vlan/ {print $2}'|sed "s/\"//g")
+        _NETWORK=$(cat ${_ENV}|awk '/'${_NET}'_network_name/ {print $2}'|sed "s/\"//g")
+        _VLAN=$(cat ${_ENV}|awk '/'${_NET}'_network_vlan/ {print $2}'|sed "s/\"//g")
 
         #####
         # Check the Network exist
         #####
-        echo -e -n " - Validating chosen ${_NAME} Network: ${_NETWORK} ...\t\t"
+        #echo -e -n " - Validating chosen ${_NAME} Network: ${_NETWORK} ...\t\t"
         neutron net-show "${_NETWORK}" >/dev/null 2>&1 || exit_for_error "Error, ${_NET} Network is not present." true hard
-        echo -e "${GREEN} [OK]${NC}"
+        #echo -e "${GREEN} [OK]${NC}"
 
         #####
         # Check the VLAN ID is corret
         # - none
         # - between 1 to 4096
         #####
-        echo -e -n "   - Validating VLAN ${_VLAN} for chosen ${_NAME} Network ${_NETWORK} ...\t\t"
+        #echo -e -n "   - Validating VLAN ${_VLAN} for chosen ${_NAME} Network ${_NETWORK} ...\t\t"
         if [[ "${_VLAN}" != "none" ]]
         then
                 if (( ${_VLAN} < 1 || ${_VLAN} > 4096 ))
@@ -79,7 +79,7 @@ function net_validation {
                         exit_for_error "Error, The VLAN ID ${_VLAN} for the ${_NET} Network is not valid. Acceptable values: \"none\" or a number between 1 to 4096." true hard
                 fi
         fi
-        echo -e "${GREEN} [OK]${NC}"
+        #echo -e "${GREEN} [OK]${NC}"
 }
 
 function port_validation {
@@ -89,19 +89,19 @@ function port_validation {
         #####
         # Check of the port exist
         #####
-        echo -e -n "     - Validating Port ${_PORT} exist ...\t\t\t"
+        #echo -e -n "     - Validating Port ${_PORT} exist ...\t\t\t"
         neutron port-show ${_PORT} >/dev/null 2>&1 || exit_for_error "Error, Port with ID ${_PORT} does not exist." false break
-        echo -e "${GREEN} [OK]${NC}"
+        #echo -e "${GREEN} [OK]${NC}"
 
         #####
         # Check if the Mac address is the same from the given one
         #####
-        echo -e -n "     - Validating Port ${_PORT} MAC Address ...\t\t"
+        #echo -e -n "     - Validating Port ${_PORT} MAC Address ...\t\t"
         if [[ "$(neutron port-show --field mac_address --format value ${_PORT})" != "${_MAC}" ]]
         then
                 exit_for_error "Error, Port with ID ${_PORT} has a different MAC Address than the one provided into the CSV file." false break
         fi
-        echo -e "${GREEN} [OK]${NC}"
+        #echo -e "${GREEN} [OK]${NC}"
 }
 
 function ip_validation {
@@ -110,7 +110,7 @@ function ip_validation {
         #####
         # Check if the given IP or NetMask is valid
         #####
-        echo -e -n "     - Validating IP Address ${_IP} ...\t\t\t\t\t\t"
+        #echo -e -n "     - Validating IP Address ${_IP} ...\t\t\t\t\t\t"
         echo ${_IP}|grep -E "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" >/dev/null 2>&1
         if [[ "${?}" != "0" ]]
         then
@@ -132,7 +132,7 @@ function ip_validation {
         then
                 exit_for_error "Error, The Address ${_IP} is not valid." true hard
         fi
-        echo -e "${GREEN} [OK]${NC}"
+        #echo -e "${GREEN} [OK]${NC}"
 }
 
 function mac_validation {
@@ -141,13 +141,13 @@ function mac_validation {
         #####
         # Check if the given IP or NetMask is valid
         #####
-        echo -e -n "     - Validating MAC Address ${_MAC} ...\t\t\t\t\t"
+        #echo -e -n "     - Validating MAC Address ${_MAC} ...\t\t\t\t\t"
         echo ${_MAC}|grep -E "([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})" >/dev/null 2>&1
         if [[ "${?}" != "0" ]]
         then
                 exit_for_error "Error, The Port Mac Address ${_MAC} is not valid." true hard
         fi
-        echo -e "${GREEN} [OK]${NC}"
+        #echo -e "${GREEN} [OK]${NC}"
 }
 
 if [[ "${1}" == "" ]]
@@ -272,7 +272,7 @@ do
         nova flavor-show "${_FLAVOR}" >/dev/null 2>&1 || exit_for_error "Error, Flavor for Unit ${_UNITTOBEVALIDATED} not present." true hard
 done
 
-echo -e "\n${GREEN}${BOLD}Verifying Units CVS Files${NC}${NORMAL}"
+#echo -e "\n${GREEN}${BOLD}Verifying Units CVS Files${NC}${NORMAL}"
 for _UNITTOBEVALIDATED in "cms" "dsu" "lvu" "mau" "omu" "smu" "vm-asu"
 do
         _CSVFILEPATH=${_ENVFOLDER}/${_UNITTOBEVALIDATED}
@@ -281,7 +281,7 @@ do
         _SIPCSVFILE=$(echo ${_CSVFILEPATH}/sip.csv)
         _MEDIACSVFILE=$(echo ${_CSVFILEPATH}/media.csv)
 
-        echo -e " - $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }')"
+        #echo -e " - $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }')"
         for _CSV in "${_ADMINCSVFILE}" "${_SZCSVFILE}" "${_SIPCSVFILE}" "${_MEDIACSVFILE}"
         do
                 #####
@@ -309,13 +309,13 @@ do
         done
 done
 
-echo -e "\n${GREEN}${BOLD}Verifying OpenStack Neutron Network${NC}${NORMAL}"
+#echo -e "\n${GREEN}${BOLD}Verifying OpenStack Neutron Network${NC}${NORMAL}"
 for _NETWORK in "admin" "sz" "sip" "media"
 do
         net_validation ${_NETWORK} $(echo ${_NETWORK}|awk '{ print toupper($0) }')
 done
 
-echo -e "\n${GREEN}${BOLD}Verifying OpenStack Neutron Ports${NC}${NORMAL}"
+#echo -e "\n${GREEN}${BOLD}Verifying OpenStack Neutron Ports${NC}${NORMAL}"
 _OLDIFS=$IFS
 IFS=","
 for _UNITTOBEVALIDATED in "cms" "dsu" "lvu" "mau" "omu" "smu" "vm-asu"
@@ -326,12 +326,12 @@ do
         _SIPCSVFILE=$(echo ${_CSVFILEPATH}/sip.csv)
         _MEDIACSVFILE=$(echo ${_CSVFILEPATH}/media.csv)
 
-        echo -e " - $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }')"
+        #echo -e " - $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }')"
         for _CSV in "${_ADMINCSVFILE}" "${_SZCSVFILE}" "${_SIPCSVFILE}" "${_MEDIACSVFILE}"
         do
                 if [[ "${_CSV}" =~ "admin.csv" ]]
                 then
-                        echo -e "   - OpenStack Admin Neutron Ports"
+                        #echo -e "   - OpenStack Admin Neutron Ports"
                         while read _PORTID _MAC _IP
                         do
                                 mac_validation ${_MAC}
@@ -342,7 +342,7 @@ do
 
                 if [[ "${_UNITTOBEVALIDATED}" != "mau" ]] && [[ "${_CSV}" =~ "sz.csv" ]]
                 then
-                        echo -e "   - OpenStack Secure Zone Neutron Ports"
+                        #echo -e "   - OpenStack Secure Zone Neutron Ports"
                         while read _PORTID _MAC _IP
                         do
                                 mac_validation ${_MAC}
@@ -353,7 +353,7 @@ do
 
                 if [[ "${_UNITTOBEVALIDATED}" == "cms" ]] && [[ "${_CSV}" =~ "sip.csv" ]]
                 then
-                        echo -e "   - OpenStack SIP Neutron Ports"
+                        #echo -e "   - OpenStack SIP Neutron Ports"
                         while read _PORTID _MAC _IP
                         do
                                 mac_validation ${_MAC}
@@ -364,7 +364,7 @@ do
 
                 if [[ "${_UNITTOBEVALIDATED}" == "cms" ]] && [[ "${_CSV}" =~ "media.csv" ]]
                 then
-                        echo -e "   - OpenStack Media Neutron Ports"
+                        #echo -e "   - OpenStack Media Neutron Ports"
                         while read _PORTID _MAC _IP
                         do
                                 mac_validation ${_MAC}

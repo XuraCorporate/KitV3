@@ -93,10 +93,17 @@ else
 	fi
 fi
 
+#####
+# Unload any previous loaded environment file
+#####
 for _BASHENV in $(env|grep ^OS|awk -F "=" '{print $1}')
 do
         unset ${_BASHENV}
 done
+
+#####
+# Load environment file
+#####
 source ${_OPENSTACKRC}
 
 _TMPSNAPSHOTNAME=$(echo tmp-$(date "+%Y%m%d%H%M%S"))
