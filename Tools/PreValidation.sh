@@ -271,7 +271,7 @@ IFS=${_OLDIFS}
 _BINS="nova glance cinder neutron heat"
 for _BIN in ${_BINS}
 do
-        which ${_BIN} > /dev/null 2>&1 || exit_for_error "Error, Cannot find python${_BIN}-client." false
+        which ${_BIN} > /dev/null 2>&1 || exit_for_error "Error, Cannot find python${_BIN}-client." false hard
 done
 
 _ASSUMEYES=""
@@ -297,16 +297,16 @@ source ${_OPENSTACKRC}
 #####
 # Verify if the given credential are valid. This will also check if the use can contact Heat
 #####
-nova --timeout 5 endpoints > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false
+nova --timeout 5 endpoints > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 
-nova list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false
+nova list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 
-glance image-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false
+glance image-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 
-cinder list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false
+cinder list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 
-neutron net-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false
+neutron net-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 
-heat stack-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false
+heat stack-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 
 exit 0
