@@ -170,27 +170,27 @@ _NEEDEDVRAM=$(( (${_CMSVRAM} * ${_CMSUNITS}) + (${_DSUVRAM} * ${_DSUUNITS}) + ($
 _NEEDEDVDISK=$(( (${_CMSVDISK} * ${_CMSUNITS}) + (${_DSUVDISK} * ${_DSUUNITS}) + (${_LVUVDISK} * ${_LVUUNITS}) + (${_MAUVDISK} * ${_MAUUNITS}) + (${_OMUVDISK} * ${_OMUUNITS}) + (${_SMUVDISK} * ${_SMUUNITS}) + (${_VMASUVDISK} * ${_VMASUUNITS}) ))
 _NEEDEDUNITS=$(( ${_CMSUNITS} + ${_DSUUNITS} + ${_LVUUNITS} + ${_MAUUNITS} + ${_OMUUNITS} + ${_SMUUNITS} + ${_VMASUUNITS} ))
 
-if (( ${_NEEDEDVCPU} >= ${_TENANTVCPU} )) && [[ ${_TENANTVCPU} != "-1" ]]
+if (( ${_NEEDEDVCPU} > ${_TENANTVCPU} )) && [[ ${_TENANTVCPU} != "-1" ]]
 then
-        echo -e "${RED}   - The Tenant Quota has ${_TENANTVCPU} vCPU and you are going to use ${_NEEDEDVCPU}${NC}"
+        echo -e "${RED}The Tenant Quota has ${_TENANTVCPU} vCPU and you are going to use ${_NEEDEDVCPU}${NC}"
 fi
 
-if (( ${_NEEDEDVRAM} >= ${_TENANTVRAM} )) && [[ ${_TENANTVRAM} != "-1" ]]
+if (( ${_NEEDEDVRAM} > ${_TENANTVRAM} )) && [[ ${_TENANTVRAM} != "-1" ]]
 then
-        echo -e "${RED}   - The Tenant Quota has ${_TENANTVRAM} vRAM and you are going to use ${_NEEDEDVRAM}${NC}"
+        echo -e "${RED}The Tenant Quota has ${_TENANTVRAM} vRAM and you are going to use ${_NEEDEDVRAM}${NC}"
 fi
 
 if [[ "$(echo ${_TENANTVDISK}|grep -E -v "[0-9]")" == "" && "${_TENANTVDISK}" != "" ]]
 then
-        if (( ${_NEEDEDVDISK} >= ${_TENANTVDISK} )) && [[ ${_TENANTVDISK} != "-1" ]]
+        if (( ${_NEEDEDVDISK} > ${_TENANTVDISK} )) && [[ ${_TENANTVDISK} != "-1" ]]
         then
-                echo -e "${RED}   - The Tenant Quota has ${_TENANTVDISK} vDISK and you are going to use ${_NEEDEDVDISK}${NC}"
+                echo -e "${RED}The Tenant Quota has ${_TENANTVDISK} vDISK and you are going to use ${_NEEDEDVDISK}${NC}"
         fi
 fi
 
-if (( ${_NEEDEDUNITS} >= ${_TENANTVMS} )) && [[ ${_TENANTVMS} != "-1" ]]
+if (( ${_NEEDEDUNITS} > ${_TENANTVMS} )) && [[ ${_TENANTVMS} != "-1" ]]
 then
-        echo -e "${RED}   - The Tenant Quota has ${_TENANTVMS} Instance and you are going to create ${_NEEDEDUNITS}${NC}"
+        echo -e "${RED}The Tenant Quota has ${_TENANTVMS} Instance and you are going to create ${_NEEDEDUNITS}${NC}"
 fi
 
 #TODO
