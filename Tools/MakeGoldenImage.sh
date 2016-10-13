@@ -121,17 +121,17 @@ _VMNAME=$(echo "${_VMSTATUS}"|awk '/ name / {print $4}'|sed "s/ //g")
 nova image-create ${_VMID} ${_TMPSNAPSHOTNAME}||exit_for_error "Error Snapshotting the VM ${_VMID}" false hard
 _SNAPSHOTID=$(glance image-list|awk '/ '${_TMPSNAPSHOTNAME}' / {print $2}')
 while :; do glance image-show ${_SNAPSHOTID}|awk '/ status / {print $4}'|grep "active" && break; done >/dev/null 2>&1 
-mkdir tmp
-glance image-download ${_SNAPSHOTID} --file ./tmp/tmp >/dev/null 2>&1\
+
+glance image-download ${_SNAPSHOTID} --file ./tmp >/dev/null 2>&1\
 	||exit_for_error "Error downloading the snapshot for ${_VMID}" false hard \
 	"rm -fr ./tmp ; glance image-delete ${_SNAPSHOTID}" 
-qemu-img convert -c -q -f qcow2 -O qcow2 ./tmp/tmp ./tmp/${_VMNAME}
+qemu-img convert -c -q -f qcow2 -O qcow2 ./tmp ./${_VMNAME}
 
 glance image-delete ${_SNAPSHOTID}
-rm -f ./tmp/tmp
+rm -f ./tmp
 
-bash Tools/ImageLoader.sh --env ${_ENVFOLDER} -i tmp/ -n ${_NAME}
+bash Tools/ImageLoader.sh --env ${_ENVFOLDER} -i ./${_VMNAME} -n ${_NAME}
 
-rm -rf ./tmp
+rm -rf ./${_VMNAME}
 
 exit 0
