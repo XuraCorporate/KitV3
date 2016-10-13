@@ -60,10 +60,15 @@ do
 	    		_VMID="$2"
 	    		shift
 	    		;;
+		-n|--name)
+	    		_NAME="$2"
+	    		shift
+	    		;;
 		-h|--help)
 			echo "Help for Golden Image Creator"
 			echo "-e|--env <envirnment folder - e.g Environments/Dev_environment>"
 			echo "-s|--source <nova image uuid or name - e.g. e59bd794-08c8-41ff-8b2a-dede6fbc06a0 or V1VTUS001XUR-SMU1A>"
+			echo "-n|--name <image name to be used - e.g swp-RedHat-Linux-OS-KVM-1.1.0.0-02_6.6.1.0-01>"
 			echo "-h|--help"
 			exit 0
 			shift
@@ -91,6 +96,10 @@ else
 	then
 		exit_for_error "The given VM ${_VMID} has an invalid task state" false hard
 	fi
+fi
+if [[ "${_NAME}" == "" ]]
+then
+	exit_for_error "Missing Image Name to be Used" false hard
 fi
 
 #####
@@ -121,7 +130,7 @@ qemu-img convert -c -q -f qcow2 -O qcow2 ./tmp/tmp ./tmp/${_VMNAME}
 glance image-delete ${_SNAPSHOTID}
 rm -f ./tmp/tmp
 
-bash Tools/ImageLoader.sh --env ${_ENVFOLDER} -i tmp/
+bash Tools/ImageLoader.sh --env ${_ENVFOLDER} -i tmp/ -n ${_NAME}
 
 rm -rf ./tmp
 

@@ -376,4 +376,15 @@ do
 done
 IFS=${_OLDIFS}
 
+for _NETWORK in "admin" "sz" "sip" "media"
+do
+	if $(cat ${_ENV}|awk '/'${_NETWORK}'_security_group_enabled/ {print tolower($2)}')
+	then
+		_SECGROUP=$(cat ${_ENV}|awk '/'${_NETWORK}'_security_group_name/ {print $2}')
+		neutron security-group-show ${_SECGROUP} >/dev/null 2>&1 || exit_for_error "Error, missing security group ${_SECGROUP} for network ${_NETWORK}" false hard
+	fi
+done
+
+# Add server group validation
+
 exit 0
