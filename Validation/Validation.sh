@@ -109,5 +109,6 @@ fi
 
 #TODO
 # Split UnitFeaturesValidation for task 
+# Errors Logs
 
 exit 0
