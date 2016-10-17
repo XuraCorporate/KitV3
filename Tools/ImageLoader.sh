@@ -108,7 +108,6 @@ do
         unset ${_BASHENV}
 done
 
-echo -e "${GREEN} [OK]${NC}"
 #####
 # Load environment file
 #####

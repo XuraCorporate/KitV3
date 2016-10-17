@@ -102,7 +102,7 @@ then
 	exit_for_error "Missing Image Name to be Used" false hard
 fi
 
-echo -e "${GREEN}Golen Image Maker${NC}"
+echo -e "${GREEN}Golden Image Maker${NC}"
 
 #####
 # Unload any previous loaded environment file
@@ -133,7 +133,7 @@ glance image-download ${_SNAPSHOTID} --file ./tmp >/dev/null 2>&1\
 echo -e "${GREEN} [OK]${NC}"
 
 echo -e -n " - Compressing in QCOW2 the downloaded VM ${_VMNAME} snapshot ...\t\t"
-qemu-img convert -c -q -f qcow2 -O qcow2 ./tmp ./${_VMNAME}
+qemu-img convert -c -q -f qcow2 -O qcow2 ./tmp ./${_NAME} || exit_for_error "Error Compressing the Image" false hard "rm -fr ./tmp ./${_NAME} ; glance image-delete ${_SNAPSHOTID}"
 echo -e "${GREEN} [OK]${NC}"
 
 
@@ -142,10 +142,10 @@ glance image-delete ${_SNAPSHOTID}
 rm -f ./tmp
 echo -e "${GREEN} [OK]${NC}"
 
-bash Tools/ImageLoader.sh --env ${_ENVFOLDER} -i ./${_VMNAME} -n ${_NAME}
+bash Tools/ImageLoader.sh --env ${_ENVFOLDER} -i ./${_NAME} -n ${_NAME}
 
 echo -e -n " - Clean Up phase 2 ...\t\t"
-rm -rf ./${_VMNAME}
+rm -rf ./${_NAME}
 echo -e "${GREEN} [OK]${NC}"
 
 
