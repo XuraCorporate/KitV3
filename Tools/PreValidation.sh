@@ -288,7 +288,7 @@ echo -e "${GREEN} [OK]${NC}"
 #####
 # Verify binary
 #####
-echo -e "\n${GREEN}${BOLD}Verifying OpenStack Binary${NC}${NORMAL}"
+echo -e "\n${GREEN}${BOLD}Verifying OpenStack Binaries${NC}${NORMAL}"
 _BINS="nova glance cinder neutron heat"
 for _BIN in ${_BINS}
 do
@@ -320,11 +320,14 @@ done
 #####
 # Load environment file
 #####
+echo -e -n " - Loading environment file ...\t\t"
 source ${_OPENSTACKRC}
+echo -e "${GREEN} [OK]${NC}"
 
 #####
 # Verify if the given credential are valid. This will also check if the use can contact Heat
 #####
+echo -e -n " - Verifying OpenStack credential ...\t"
 nova --timeout 5 endpoints > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 echo -e "${GREEN} [OK]${NC}"
 
