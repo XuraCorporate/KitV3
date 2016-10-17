@@ -293,7 +293,7 @@ _BINS="nova glance cinder neutron heat"
 for _BIN in ${_BINS}
 do
         echo -e -n " - Verifying ${_BIN} binary ...\t\t"
-        which ${_BIN} > /dev/null 2>&1 || exit_for_error "Error, Cannot find python${_BIN}-client." false
+        which ${_BIN} > /dev/null 2>&1 || exit_for_error "Error, Cannot find python${_BIN}-client." false hard
         echo -e "${GREEN} [OK]${NC}"
 done
 
@@ -333,23 +333,23 @@ echo -e "${GREEN} [OK]${NC}"
 
 echo -e "\n${GREEN}${BOLD}Verifying OpenStack API Access${NC}${NORMAL}"
 echo -e -n " - Verifying access to OpenStack Nova API ...\t\t"
-nova list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false
+nova list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 echo -e "${GREEN} [OK]${NC}"
 
 echo -e -n " - Verifying access to OpenStack Glance API ...\t\t"
-glance image-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false
+glance image-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 echo -e "${GREEN} [OK]${NC}"
 
 echo -e -n " - Verifying access to OpenStack Cinder API ...\t\t"
-cinder list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false
+cinder list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 echo -e "${GREEN} [OK]${NC}"
 
 echo -e -n " - Verifying access to OpenStack Neutron API ...\t"
-neutron net-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false
+neutron net-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 echo -e "${GREEN} [OK]${NC}"
 
 echo -e -n " - Verifying access to OpenStack Heat API ...\t\t"
-heat stack-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false
+heat stack-list > /dev/null 2>&1 || exit_for_error "Error, During credential validation." false hard
 echo -e "${GREEN} [OK]${NC}"
 
 exit 0

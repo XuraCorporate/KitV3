@@ -48,7 +48,7 @@ function csv_validation {
         echo -e -n "   - Verifying unit $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }') CSV file ${_CSV} ...\t\t"
         if [ ! -f ${_CSV} ] || [ ! -r ${_CSV} ] || [ ! -s ${_CSV} ]
         then
-                exit_for_error "CSV File ${_CSV} Network with mapping PortID,MacAddress,FixedIP does not exist." false soft
+                exit_for_error "CSV File ${_CSV} Network with mapping PortID,MacAddress,FixedIP does not exist." false hard
         fi
         echo -e "${GREEN} [OK]${NC}"
 }
@@ -90,7 +90,7 @@ function port_validation {
         # Check of the port exist
         #####
         echo -e -n "     - Validating Port ${_PORT} exist ...\t\t\t"
-        neutron port-show ${_PORT} >/dev/null 2>&1 || exit_for_error "Error, Port with ID ${_PORT} does not exist." false break
+        neutron port-show ${_PORT} >/dev/null 2>&1 || exit_for_error "Error, Port with ID ${_PORT} does not exist." false hard
         echo -e "${GREEN} [OK]${NC}"
 
         #####
@@ -99,7 +99,7 @@ function port_validation {
         echo -e -n "     - Validating Port ${_PORT} MAC Address ...\t\t"
         if [[ "$(neutron port-show --field mac_address --format value ${_PORT})" != "${_MAC}" ]]
         then
-                exit_for_error "Error, Port with ID ${_PORT} has a different MAC Address than the one provided into the CSV file." false break
+                exit_for_error "Error, Port with ID ${_PORT} has a different MAC Address than the one provided into the CSV file." false hard
         fi
         echo -e "${GREEN} [OK]${NC}"
 }

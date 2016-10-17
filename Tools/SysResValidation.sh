@@ -80,7 +80,6 @@ then
         exit_for_error "Error, Environment file is missing." false hard
 fi
 
-echo -e "${GREEN}System Resource Validation${NC}"
 #####
 # Unload any previous loaded environment file
 #####
@@ -94,7 +93,7 @@ done
 #####
 source ${_OPENSTACKRC}
 
-echo -e "\n${GREEN}${BOLD}Verifying OpenStack Quota${NC}${NORMAL}"
+echo -e "\n${GREEN}${BOLD}System Resource Validation${NC}${NORMAL}"
 echo -e -n " - Gathering CMS Quota ...\t\t"
 _CMSFLAVOR=$(cat ${_ENV}|awk '/cms_flavor_name/ {print $2}'|sed "s/\"//g")
 _CMSFLAVOROUTPUT=$(nova flavor-show ${_CMSFLAVOR})
