@@ -98,6 +98,7 @@ then
         exit_for_error "Missing Image Name to be Used" false hard
 fi
 
+echo -e "${GREEN}Image Uploader${NC}"
 
 #####
 # Unload any previous loaded environment file
@@ -107,33 +108,42 @@ do
         unset ${_BASHENV}
 done
 
+echo -e "${GREEN} [OK]${NC}"
 #####
 # Load environment file
 #####
 source ${_OPENSTACKRC}
 
+echo -e -n " - Calculating Image ${_IMAGE} md5 ...\t\t"
 _IMAGEMD5=$(md5sum ${_IMAGE}|awk '{print $1}')
+echo -e "${GREEN} [OK]${NC}"
 
 #TODO - Support multiple image type using file or qemu-img info
+echo -e -n " - Verifying if image already exist ...\t\t"
 _IMAGEEXIST=$(glance image-show $(glance image-list|awk '/ '${_NAME}' / {print $2}') 2>/dev/null)
+echo -e "${GREEN} [OK]${NC}"
 
 # Try to avoid to load two images with the same name
+echo -e -n " - Comparing MD5s ...\t\t"
 if [[ "$(echo "${_IMAGEEXIST}"|awk '/ checksum / {print $4}')" != "${_IMAGEMD5}" ]]
 then
+	echo -e "${GREEN} The image will be uploaded${NC}"
 	_IMAGEOUTPUT=$(glance image-create \
 		--file ${_IMAGE} \
 		--name ${_NAME} \
 		--disk-format qcow2 \
 		--container-format bare || exit_for_error "Error upload image - ${_IMAGE}" false hard) >/dev/null 2>&1
+	echo -e -n " - Verifying uploaded image MD5 with the local one ...\t\t"
 	if [[ "$(echo "${_IMAGEOUTPUT}"|awk '/ checksum / {print $4}')" != "${_IMAGEMD5}" ]]
 	then
 		exit_for_error "Error validating the image ${_IMAGE} checksum" false hard "glance image-delete $(echo "${_IMAGEOUTPUT}"|awk '/ id / {print $4}')"
 	fi
+	echo -e "${GREEN} [OK]${NC}"
+else
+	echo -e "${GREEN} The image already exist, not uploaded.${NC}"
 fi
 
-
+exit 0
 # TODO
 # Name comes from outside 
 # Add output in order to have task status
-
-exit 0

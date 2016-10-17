@@ -102,6 +102,8 @@ then
 	exit_for_error "Missing Image Name to be Used" false hard
 fi
 
+echo -e "${GREEN}Golen Image Maker${NC}"
+
 #####
 # Unload any previous loaded environment file
 #####
@@ -118,20 +120,33 @@ source ${_OPENSTACKRC}
 _TMPSNAPSHOTNAME=$(echo tmp-$(date "+%Y%m%d%H%M%S"))
 _VMNAME=$(echo "${_VMSTATUS}"|awk '/ name / {print $4}'|sed "s/ //g")
 
+echo -e -n " - Creating VM ${_VMNAME} snapshot ...\t\t"
 nova image-create ${_VMID} ${_TMPSNAPSHOTNAME}||exit_for_error "Error Snapshotting the VM ${_VMID}" false hard
 _SNAPSHOTID=$(glance image-list|awk '/ '${_TMPSNAPSHOTNAME}' / {print $2}')
 while :; do glance image-show ${_SNAPSHOTID}|awk '/ status / {print $4}'|grep "active" && break; done >/dev/null 2>&1 
+echo -e "${GREEN} [OK]${NC}"
 
+echo -e -n " - Downloading VM ${_VMNAME} snapshot ...\t\t"
 glance image-download ${_SNAPSHOTID} --file ./tmp >/dev/null 2>&1\
 	||exit_for_error "Error downloading the snapshot for ${_VMID}" false hard \
 	"rm -fr ./tmp ; glance image-delete ${_SNAPSHOTID}" 
-qemu-img convert -c -q -f qcow2 -O qcow2 ./tmp ./${_VMNAME}
+echo -e "${GREEN} [OK]${NC}"
 
+echo -e -n " - Compressing in QCOW2 the downloaded VM ${_VMNAME} snapshot ...\t\t"
+qemu-img convert -c -q -f qcow2 -O qcow2 ./tmp ./${_VMNAME}
+echo -e "${GREEN} [OK]${NC}"
+
+
+echo -e -n " - Clean Up phase 1 ...\t\t"
 glance image-delete ${_SNAPSHOTID}
 rm -f ./tmp
+echo -e "${GREEN} [OK]${NC}"
 
 bash Tools/ImageLoader.sh --env ${_ENVFOLDER} -i ./${_VMNAME} -n ${_NAME}
 
+echo -e -n " - Clean Up phase 2 ...\t\t"
 rm -rf ./${_VMNAME}
+echo -e "${GREEN} [OK]${NC}"
+
 
 exit 0

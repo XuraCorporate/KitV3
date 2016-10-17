@@ -206,9 +206,4 @@ then
         echo -e "${RED}The Tenant Quota has ${_TENANTVMS} Instance and you are going to create ${_NEEDEDUNITS}${NC}"
 fi
 
-#TODO
-# QUOTA IS MISSING CURRENT ALLOCATED RESOURCES
-# Ensure exit on error 
-
-
 exit 0
