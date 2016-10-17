@@ -186,8 +186,6 @@ then
         exit_for_error "Error, Environment file is missing." false hard
 fi
 
-echo -e "${GREEN}Image Validation${NC}"
-
 #####
 # Unload any previous loaded environment file
 #####
@@ -200,101 +198,6 @@ done
 # Load environment file
 #####
 source ${_OPENSTACKRC}
-
-echo -e "\n${GREEN}${BOLD}Verifying Units Specific Characteristic${NC}${NORMAL}"
-for _UNITTOBEVALIDATED in "cms" "dsu" "lvu" "mau" "omu" "smu" "vm-asu"
-do
-        _IMAGE=$(cat ${_ENV}|grep "$(echo "${_UNITTOBEVALIDATED}" | awk '{print tolower($0)}')_image"|grep -v -E "image_id|image_source|image_volume_size"|awk '{print $2}'|sed "s/\"//g")
-        _VOLUMEID=$(cat ${_ENV}|awk '/'$(echo "${_UNITTOBEVALIDATED}" | awk '{print tolower($0)}')_volume_id'/ {print $2}'|sed "s/\"//g")
-        _FLAVOR=$(cat ${_ENV}|awk '/'$(echo "${_UNITTOBEVALIDATED}" | awk '{print tolower($0)}')_flavor_name'/ {print $2}'|sed "s/\"//g")
-        _SOURCE=$(cat ${_ENV}|grep "$(echo "${_UNITTOBEVALIDATED}" | awk '{print tolower($0)}')_image_source"|awk '{print $2}'|sed "s/\"//g")
-
-        #####
-        # _SOURCE=glance -> Check the Image Id and the Image Name is the same 
-        # _SOURCE=cinder -> Check the Volume Id, the Given size and if the Volume snapshot/clone feature is present 
-        #####
-        if [[ "${_SOURCE}" == "glance" ]]
-        then
-                if $(cat ${_ENV}|awk '/'${_UNITTOBEVALIDATED}'_local_boot/ {print $2}'|awk '{print tolower($0)}')
-                then
-                        echo -e " - ${GREEN}The Unit ${_UNITTOBEVALIDATED} will boot from the local hypervisor disk (aka Ephemeral Disk)${NC}"
-                else
-                        echo -e " - ${GREEN}The Unit ${_UNITTOBEVALIDATED} will boot from Volume (aka from the SAN)${NC}"
-                fi
-
-                echo -e -n "   - Validating chosen Glance Image ${_IMAGE} ...\t"
-		_IMAGEID=$(glance image-list|awk '/ '${_IMAGE}' / {print $2}')
-		if (( "$( echo "${_IMAGEID}"|wc -l)" > "1" ))
-		then
-			echo -e "${RED}" "Image for Unit ${_UNITTOBEVALIDATED} has multiple source" "${NC}"
-			echo -e "${RED}" "${_IMAGEID}" "${NC}"
-			exit_for_error "Error" true hard
-		elif [[ "${_IMAGEID}" == "" ]]
-		then
-                	exit_for_error "Error, Image for Unit ${_UNITTOBEVALIDATED} is not present or it mismatches between ID and Name." true hard
-		fi
-		echo -e "${GREEN} [OK]${NC}"
-
-        elif [[ "${_SOURCE}" == "cinder" ]]
-        then
-                echo -e " - ${GREEN}The Unit ${_UNITTOBEVALIDATED} will boot from Volume (aka from the SAN)${NC}"
-
-                echo -e -n "   - Validating chosen Cinder Volume ${_VOLUMEID} ...\t\t\t\t"
-		_VOLUME_DETAILS=$(cinder show ${_VOLUMEID} 2>/dev/null)
-		if [[ "$?" != "0" ]]
-		then
-			exit_for_error "Error, Volume for Unit ${_UNITTOBEVALIDATED} not present." true hard
-		fi
-                echo -e "${GREEN} [OK]${NC}"
-
-		echo -e -n "   - Validating given volume size ...\t\t\t\t\t\t\t\t"
-                _VOLUME_SIZE=$(echo "${_VOLUME_DETAILS}"|awk '/ size / {print $4}'|sed "s/ //g")
-                _VOLUME_GIVEN_SIZE=$(cat ${_ENV}|awk '/'$(echo "${_UNITTOBEVALIDATED}" | awk '{print tolower($0)}')_volume_size'/ {print $2}'|sed "s/\"//g")
-                if (( "${_VOLUME_GIVEN_SIZE}" < "${_VOLUME_SIZE}" ))
-                then
-                        exit_for_error "Error, Volume for Unit ${_UNITTOBEVALIDATED} with UUID ${_VOLUMEID} has a size of ${_VOLUME_SIZE} which cannot fit into the given input size of ${_VOLUME_GIVEN_SIZE}." true hard
-                fi
-		echo -e "${GREEN} [OK]${NC}"
-
-                #####
-                # Creating a test volume to verify that the snapshotting works
-                # https://wiki.openstack.org/wiki/CinderSupportMatrix
-                # e.g. Feature not available with standard NFS driver
-                #####
-		echo -e -n "   - Validating if volume cloning/snapshotting feature is available ...\t\t\t"
-                #####
-                # Creating a new volume from the given one
-                #####
-                cinder create --source-volid ${_VOLUMEID} --display-name "temp-${_VOLUMEID}" ${_VOLUME_SIZE} >/dev/null 2>&1 || exit_for_error "Error, During volume cloning/snapshotting. With the current Cinder's backend Glance has to be used." true hard "cinder delete temp-${_VOLUMEID}"
-
-                #####
-                # Wait until the volume created is in error or available states
-                #####
-                while :
-                do
-                        _VOLUME_SOURCE_STATUS=$(cinder show temp-${_VOLUMEID}|grep " status "|awk '{print $4}')
-                        if [[ "${_VOLUME_SOURCE_STATUS}" == "available" ]]
-                        then
-                                cinder delete temp-${_VOLUMEID} >/dev/null 2>&1
-				echo -e "${GREEN} [OK]${NC}"
-                                break
-                        elif [[ "${_VOLUME_SOURCE_STATUS}" == "error" ]]
-                        then
-                                cinder delete temp-${_VOLUMEID} >/dev/null 2>&1
-                                exit_for_error "Error, the system does not support volume cloning/snapshotting. With the current Cinder's backend Glance has to be used." true hard
-                        fi
-                done
-        else
-                exit_for_error "Error, Invalid Image Source option, can be \"glance\" or \"cinder\"." true hard
-        fi
-
-        #####
-        # Check the given flavor is available
-        #####
-        echo -e -n "   - Validating chosen Flavor ${_FLAVOR} ...\t\t\t\t\t\t"
-        nova flavor-show "${_FLAVOR}" >/dev/null 2>&1 || exit_for_error "Error, Flavor for Unit ${_UNITTOBEVALIDATED} not present." true hard
-        echo -e "${GREEN} [OK]${NC}"
-done
 
 echo -e "\n${GREEN}${BOLD}Verifying Units CVS Files${NC}${NORMAL}"
 for _UNITTOBEVALIDATED in "cms" "dsu" "lvu" "mau" "omu" "smu" "vm-asu"
@@ -399,19 +302,5 @@ do
         done
 done
 IFS=${_OLDIFS}
-
-echo -e "\n${GREEN}${BOLD}Verifying OpenStack Neutron Security Group${NC}${NORMAL}"
-for _NETWORK in "admin" "sz" "sip" "media"
-do
-	if $(cat ${_ENV}|awk '/'${_NETWORK}'_security_group_enabled/ {print tolower($2)}')
-	then
-		echo -e -n " - Security Group for ${_NETWORK} network ...\t\t\t"
-		_SECGROUP=$(cat ${_ENV}|awk '/'${_NETWORK}'_security_group_name/ {print $2}')
-		neutron security-group-show ${_SECGROUP} >/dev/null 2>&1 || exit_for_error "Error, missing security group ${_SECGROUP} for network ${_NETWORK}" false hard
-		echo -e "${GREEN} [OK]${NC}"
-	fi
-done
-
-# Add server group validation
 
 exit 0
