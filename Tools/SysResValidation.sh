@@ -80,6 +80,7 @@ then
         exit_for_error "Error, Environment file is missing." false hard
 fi
 
+echo -e "${GREEN}System Resource Validation${NC}"
 #####
 # Unload any previous loaded environment file
 #####
@@ -93,13 +94,17 @@ done
 #####
 source ${_OPENSTACKRC}
 
+echo -e "\n${GREEN}${BOLD}Verifying OpenStack Quota${NC}${NORMAL}"
+echo -e -n " - Gathering CMS Quota ...\t\t"
 _CMSFLAVOR=$(cat ${_ENV}|awk '/cms_flavor_name/ {print $2}'|sed "s/\"//g")
 _CMSFLAVOROUTPUT=$(nova flavor-show ${_CMSFLAVOR})
 _CMSVCPU=$(echo "${_CMSFLAVOROUTPUT}"|grep " vcpus "|awk '{print $4}')
 _CMSVRAM=$(echo "${_CMSFLAVOROUTPUT}"|grep " ram "|awk '{print $4}')
 _CMSVDISK=$(echo "${_CMSFLAVOROUTPUT}"|grep " disk "|awk '{print $4}')
 _CMSUNITS=$(cat ${_ENVFOLDER}/cms/admin.csv|wc -l)
+echo -e "${GREEN} [OK]${NC}"
 
+echo -e -n " - Gathering DSU Quota ...\t\t"
 _DSUFLAVOR=$(cat ${_ENV}|awk '/dsu_flavor_name/ {print $2}'|sed "s/\"//g")
 if [[ "${_DSUFLAVOR}" == "${_CMSFLAVOR}" ]]
 then
@@ -111,7 +116,9 @@ _DSUVCPU=$(echo "${_DSUFLAVOROUTPUT}"|grep " vcpus "|awk '{print $4}')
 _DSUVRAM=$(echo "${_DSUFLAVOROUTPUT}"|grep " ram "|awk '{print $4}')
 _DSUVDISK=$(echo "${_DSUFLAVOROUTPUT}"|grep " disk "|awk '{print $4}')
 _DSUUNITS=$(cat ${_ENVFOLDER}/dsu/admin.csv|wc -l)
+echo -e "${GREEN} [OK]${NC}"
 
+echo -e -n " - Gathering LVU Quota ...\t\t"
 _LVUFLAVOR=$(cat ${_ENV}|awk '/lvu_flavor_name/ {print $2}'|sed "s/\"//g")
 if [[ "${_LVUFLAVOR}" == "${_DSUFLAVOR}" ]]
 then
@@ -123,7 +130,9 @@ _LVUVCPU=$(echo "${_LVUFLAVOROUTPUT}"|grep " vcpus "|awk '{print $4}')
 _LVUVRAM=$(echo "${_LVUFLAVOROUTPUT}"|grep " ram "|awk '{print $4}')
 _LVUVDISK=$(echo "${_LVUFLAVOROUTPUT}"|grep " disk "|awk '{print $4}')
 _LVUUNITS=$(cat ${_ENVFOLDER}/lvu/admin.csv|wc -l)
+echo -e "${GREEN} [OK]${NC}"
 
+echo -e -n " - Gathering MAU Quota ...\t\t"
 _MAUFLAVOR=$(cat ${_ENV}|awk '/mau_flavor_name/ {print $2}'|sed "s/\"//g")
 if [[ "${_MAUFLAVOR}" == "${_LVUFLAVOR}" ]]
 then
@@ -135,7 +144,9 @@ _MAUVCPU=$(echo "${_MAUFLAVOROUTPUT}"|grep " vcpus "|awk '{print $4}')
 _MAUVRAM=$(echo "${_MAUFLAVOROUTPUT}"|grep " ram "|awk '{print $4}')
 _MAUVDISK=$(echo "${_MAUFLAVOROUTPUT}"|grep " disk "|awk '{print $4}')
 _MAUUNITS=$(cat ${_ENVFOLDER}/mau/admin.csv|wc -l)
+echo -e "${GREEN} [OK]${NC}"
 
+echo -e -n " - Gathering OMU Quota ...\t\t"
 _OMUFLAVOR=$(cat ${_ENV}|awk '/omu_flavor_name/ {print $2}'|sed "s/\"//g")
 if [[ "${_OMUFLAVOR}" == "${_MAUFLAVOR}" ]]
 then
@@ -147,7 +158,9 @@ _OMUVCPU=$(echo "${_OMUFLAVOROUTPUT}"|grep " vcpus "|awk '{print $4}')
 _OMUVRAM=$(echo "${_OMUFLAVOROUTPUT}"|grep " ram "|awk '{print $4}')
 _OMUVDISK=$(echo "${_OMUFLAVOROUTPUT}"|grep " disk "|awk '{print $4}')
 _OMUUNITS=$(cat ${_ENVFOLDER}/omu/admin.csv|wc -l)
+echo -e "${GREEN} [OK]${NC}"
 
+echo -e -n " - Gathering SMU Quota ...\t\t"
 _SMUFLAVOR=$(cat ${_ENV}|awk '/smu_flavor_name/ {print $2}'|sed "s/\"//g")
 if [[ "${_SMUFLAVOR}" == "${_OMUFLAVOR}" ]]
 then
@@ -159,7 +172,9 @@ _SMUVCPU=$(echo "${_SMUFLAVOROUTPUT}"|grep " vcpus "|awk '{print $4}')
 _SMUVRAM=$(echo "${_SMUFLAVOROUTPUT}"|grep " ram "|awk '{print $4}')
 _SMUVDISK=$(echo "${_SMUFLAVOROUTPUT}"|grep " disk "|awk '{print $4}')
 _SMUUNITS=$(cat ${_ENVFOLDER}/smu/admin.csv|wc -l)
+echo -e "${GREEN} [OK]${NC}"
 
+echo -e -n " - Gathering VM-ASU Quota ...\t\t"
 _VMASUFLAVOR=$(cat ${_ENV}|awk '/vm-asu_flavor_name/ {print $2}'|sed "s/\"//g")
 if [[ "${_VMASUFLAVOR}" == "${_SMUFLAVOR}" ]]
 then
@@ -171,39 +186,73 @@ _VMASUVCPU=$(echo "${_VMASUFLAVOROUTPUT}"|grep " vcpus "|awk '{print $4}')
 _VMASUVRAM=$(echo "${_VMASUFLAVOROUTPUT}"|grep " ram "|awk '{print $4}')
 _VMASUVDISK=$(echo "${_VMASUFLAVOROUTPUT}"|grep " disk "|awk '{print $4}')
 _VMASUUNITS=$(cat ${_ENVFOLDER}/vm-asu/admin.csv|wc -l)
+echo -e "${GREEN} [OK]${NC}"
 
+echo -e -n " - Gathering Tenant Quota ...\t\t"
 _TENANTQUOTA=$(nova quota-show)
 _TENANTVCPU=$(echo "${_TENANTQUOTA}"|awk '/\| cores / {print $4}')
 _TENANTVRAM=$(echo "${_TENANTQUOTA}"|awk '/\| ram / {print $4}')
 _TENANTVDISK=$(echo "${_TENANTQUOTA}"|awk '/\| disk / {print $4}')
 _TENANTVMS=$(echo "${_TENANTQUOTA}"|awk '/\| instances / {print $4}')
+echo -e "${GREEN} [OK]${NC}"
 
+echo -e " - Verifying Tenant Quota for all of the Units"
 _NEEDEDVCPU=$(( (${_CMSVCPU} * ${_CMSUNITS}) + (${_DSUVCPU} * ${_DSUUNITS}) + (${_LVUVCPU} * ${_LVUUNITS}) + (${_MAUVCPU} * ${_MAUUNITS}) + (${_OMUVCPU} * ${_OMUUNITS}) + (${_SMUVCPU} * ${_SMUUNITS}) + (${_VMASUVCPU} * ${_VMASUUNITS}) ))
 _NEEDEDVRAM=$(( (${_CMSVRAM} * ${_CMSUNITS}) + (${_DSUVRAM} * ${_DSUUNITS}) + (${_LVUVRAM} * ${_LVUUNITS}) + (${_MAUVRAM} * ${_MAUUNITS}) + (${_OMUVRAM} * ${_OMUUNITS}) + (${_SMUVRAM} * ${_SMUUNITS}) + (${_VMASUVRAM} * ${_VMASUUNITS}) ))
 _NEEDEDVDISK=$(( (${_CMSVDISK} * ${_CMSUNITS}) + (${_DSUVDISK} * ${_DSUUNITS}) + (${_LVUVDISK} * ${_LVUUNITS}) + (${_MAUVDISK} * ${_MAUUNITS}) + (${_OMUVDISK} * ${_OMUUNITS}) + (${_SMUVDISK} * ${_SMUUNITS}) + (${_VMASUVDISK} * ${_VMASUUNITS}) ))
 _NEEDEDUNITS=$(( ${_CMSUNITS} + ${_DSUUNITS} + ${_LVUUNITS} + ${_MAUUNITS} + ${_OMUUNITS} + ${_SMUUNITS} + ${_VMASUUNITS} ))
 
-if (( ${_NEEDEDVCPU} > ${_TENANTVCPU} )) && [[ ${_TENANTVCPU} != "-1" ]]
+if (( ${_NEEDEDVCPU} <= ${_TENANTVCPU} )) || [[ ${_TENANTVCPU} == "-1" ]]
 then
-        echo -e "${RED}The Tenant Quota has ${_TENANTVCPU} vCPU and you are going to use ${_NEEDEDVCPU}${NC}"
+        if [[ ${_TENANTVCPU} == "-1" ]]
+        then
+                echo -e "   - The Tenant Quota has unlimited vCPU and you are going to use ${GREEN}${_NEEDEDVCPU}${NC}"
+        else
+                echo -e "   - The Tenant Quota has ${_TENANTVCPU} vCPU and you are going to use ${GREEN}${_NEEDEDVCPU}${NC}"
+        fi
+else
+        echo -e "${RED}   - The Tenant Quota has ${_TENANTVCPU} vCPU and you are going to use ${_NEEDEDVCPU}${NC}"
 fi
 
-if (( ${_NEEDEDVRAM} > ${_TENANTVRAM} )) && [[ ${_TENANTVRAM} != "-1" ]]
+if (( ${_NEEDEDVRAM} <= ${_TENANTVRAM} )) || [[ ${_TENANTVRAM} == "-1" ]]
 then
-        echo -e "${RED}The Tenant Quota has ${_TENANTVRAM} vRAM and you are going to use ${_NEEDEDVRAM}${NC}"
+        if [[ ${_TENANTVRAM} == "-1" ]]
+        then
+                echo -e "   - The Tenant Quota has unlimited vRAM and you are going to use ${GREEN}${_NEEDEDVRAM}${NC}"
+        else
+                echo -e "   - The Tenant Quota has ${_TENANTVRAM} vRAM and you are going to use ${GREEN}${_NEEDEDVRAM}${NC}"
+        fi
+else
+        echo -e "${RED}   - The Tenant Quota has ${_TENANTVRAM} vRAM and you are going to use ${_NEEDEDVRAM}${NC}"
 fi
 
 if [[ "$(echo ${_TENANTVDISK}|grep -E -v "[0-9]")" == "" && "${_TENANTVDISK}" != "" ]]
 then
-        if (( ${_NEEDEDVDISK} > ${_TENANTVDISK} )) && [[ ${_TENANTVDISK} != "-1" ]]
+        if (( ${_NEEDEDVDISK} <= ${_TENANTVDISK} )) || [[ ${_TENANTVDISK} == "-1" ]]
         then
-                echo -e "${RED}The Tenant Quota has ${_TENANTVDISK} vDISK and you are going to use ${_NEEDEDVDISK}${NC}"
+                if [[ ${_TENANTVDISK} == "-1" ]]
+                then
+                        echo -e "   - The Tenant Quota has unlimited vDISK and you are going to use ${GREEN}${_NEEDEDVDISK}${NC}"
+                else
+                        echo -e "   - The Tenant Quota has ${_TENANTVDISK} vDISK and you are going to use ${GREEN}${_NEEDEDVDISK}${NC}"
+                fi
+        else
+                echo -e "${RED}   - The Tenant Quota has ${_TENANTVDISK} vDISK and you are going to use ${_NEEDEDVDISK}${NC}"
         fi
+else
+	echo -e "${YELLOW}   - This OpenStack version does not support Tenant Disk Quota${NC}"
 fi
 
-if (( ${_NEEDEDUNITS} > ${_TENANTVMS} )) && [[ ${_TENANTVMS} != "-1" ]]
+if (( ${_NEEDEDUNITS} <= ${_TENANTVMS} )) || [[ ${_TENANTVMS} == "-1" ]]
 then
-        echo -e "${RED}The Tenant Quota has ${_TENANTVMS} Instance and you are going to create ${_NEEDEDUNITS}${NC}"
+        if [[ ${_TENANTVMS} == "-1" ]]
+        then
+                echo -e "   - The Tenant Quota has unlimited Instance and you are going to create ${GREEN}${_NEEDEDUNITS}${NC}"
+        else
+                echo -e "   - The Tenant Quota has ${_TENANTVMS} Instance and you are going to create ${GREEN}${_NEEDEDUNITS}${NC}"
+        fi
+else
+        echo -e "${RED}   - The Tenant Quota has ${_TENANTVMS} Instance and you are going to create ${_NEEDEDUNITS}${NC}"
 fi
 
 exit 0
