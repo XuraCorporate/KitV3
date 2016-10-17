@@ -99,9 +99,36 @@ then
 fi
 
 #####
-# Exec UnitFeaturesValidation
+# Exec ImageValidation
 #####
-bash ./Tools/UnitFeaturesValidation.sh --env ${_ENVFOLDER}
+bash ./Tools/ImageValidation.sh --env ${_ENVFOLDER}
+if [[ "$?" != "0" ]]
+then
+	exit 1
+fi
+
+#####
+# Exec FlavorValidation
+#####
+bash ./Tools/FlavorValidation.sh --env ${_ENVFOLDER}
+if [[ "$?" != "0" ]]
+then
+	exit 1
+fi
+
+#####
+# Exec NeutronSpecsValidation
+#####
+bash ./Tools/NeutronSpecsValidation.sh --env ${_ENVFOLDER}
+if [[ "$?" != "0" ]]
+then
+	exit 1
+fi
+
+#####
+# Exec SecGroupValidation
+#####
+bash ./Tools/SecGroupValidation.sh --env ${_ENVFOLDER}
 if [[ "$?" != "0" ]]
 then
 	exit 1
