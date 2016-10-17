@@ -45,12 +45,12 @@ function exit_for_error {
 }
 
 function csv_validation {
-        #echo -e -n "   - Verifying unit $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }') CSV file ${_CSV} ...\t\t"
+        echo -e -n "   - Verifying unit $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }') CSV file ${_CSV} ...\t\t"
         if [ ! -f ${_CSV} ] || [ ! -r ${_CSV} ] || [ ! -s ${_CSV} ]
         then
                 exit_for_error "CSV File ${_CSV} Network with mapping PortID,MacAddress,FixedIP does not exist." false soft
         fi
-        #echo -e "${GREEN} [OK]${NC}"
+        echo -e "${GREEN} [OK]${NC}"
 }
 
 function net_validation {
@@ -62,16 +62,16 @@ function net_validation {
         #####
         # Check the Network exist
         #####
-        #echo -e -n " - Validating chosen ${_NAME} Network: ${_NETWORK} ...\t\t"
+        echo -e -n " - Validating chosen ${_NAME} Network: ${_NETWORK} ...\t\t"
         neutron net-show "${_NETWORK}" >/dev/null 2>&1 || exit_for_error "Error, ${_NET} Network is not present." true hard
-        #echo -e "${GREEN} [OK]${NC}"
+        echo -e "${GREEN} [OK]${NC}"
 
         #####
         # Check the VLAN ID is corret
         # - none
         # - between 1 to 4096
         #####
-        #echo -e -n "   - Validating VLAN ${_VLAN} for chosen ${_NAME} Network ${_NETWORK} ...\t\t"
+        echo -e -n "   - Validating VLAN ${_VLAN} for chosen ${_NAME} Network ${_NETWORK} ...\t\t"
         if [[ "${_VLAN}" != "none" ]]
         then
                 if (( ${_VLAN} < 1 || ${_VLAN} > 4096 ))
@@ -79,7 +79,7 @@ function net_validation {
                         exit_for_error "Error, The VLAN ID ${_VLAN} for the ${_NET} Network is not valid. Acceptable values: \"none\" or a number between 1 to 4096." true hard
                 fi
         fi
-        #echo -e "${GREEN} [OK]${NC}"
+        echo -e "${GREEN} [OK]${NC}"
 }
 
 function port_validation {
@@ -89,19 +89,19 @@ function port_validation {
         #####
         # Check of the port exist
         #####
-        #echo -e -n "     - Validating Port ${_PORT} exist ...\t\t\t"
+        echo -e -n "     - Validating Port ${_PORT} exist ...\t\t\t"
         neutron port-show ${_PORT} >/dev/null 2>&1 || exit_for_error "Error, Port with ID ${_PORT} does not exist." false break
-        #echo -e "${GREEN} [OK]${NC}"
+        echo -e "${GREEN} [OK]${NC}"
 
         #####
         # Check if the Mac address is the same from the given one
         #####
-        #echo -e -n "     - Validating Port ${_PORT} MAC Address ...\t\t"
+        echo -e -n "     - Validating Port ${_PORT} MAC Address ...\t\t"
         if [[ "$(neutron port-show --field mac_address --format value ${_PORT})" != "${_MAC}" ]]
         then
                 exit_for_error "Error, Port with ID ${_PORT} has a different MAC Address than the one provided into the CSV file." false break
         fi
-        #echo -e "${GREEN} [OK]${NC}"
+        echo -e "${GREEN} [OK]${NC}"
 }
 
 function ip_validation {
@@ -110,7 +110,7 @@ function ip_validation {
         #####
         # Check if the given IP or NetMask is valid
         #####
-        #echo -e -n "     - Validating IP Address ${_IP} ...\t\t\t\t\t\t"
+        echo -e -n "     - Validating IP Address ${_IP} ...\t\t\t\t\t\t"
         echo ${_IP}|grep -E "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" >/dev/null 2>&1
         if [[ "${?}" != "0" ]]
         then
@@ -132,7 +132,7 @@ function ip_validation {
         then
                 exit_for_error "Error, The Address ${_IP} is not valid." true hard
         fi
-        #echo -e "${GREEN} [OK]${NC}"
+        echo -e "${GREEN} [OK]${NC}"
 }
 
 function mac_validation {
@@ -141,13 +141,13 @@ function mac_validation {
         #####
         # Check if the given IP or NetMask is valid
         #####
-        #echo -e -n "     - Validating MAC Address ${_MAC} ...\t\t\t\t\t"
+        echo -e -n "     - Validating MAC Address ${_MAC} ...\t\t\t\t\t"
         echo ${_MAC}|grep -E "([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})" >/dev/null 2>&1
         if [[ "${?}" != "0" ]]
         then
                 exit_for_error "Error, The Port Mac Address ${_MAC} is not valid." true hard
         fi
-        #echo -e "${GREEN} [OK]${NC}"
+        echo -e "${GREEN} [OK]${NC}"
 }
 
 if [[ "${1}" == "" ]]
@@ -170,7 +170,7 @@ do
 			shift
 			;;
 		*)
-			echo "Unknown option $1 $2"
+                        echo -e "${RED}Unknown option $1 $2${NC}"
 			shift
 			;;
 	esac
@@ -186,6 +186,8 @@ then
         exit_for_error "Error, Environment file is missing." false hard
 fi
 
+echo -e "${GREEN}Image Validation${NC}"
+
 #####
 # Unload any previous loaded environment file
 #####
@@ -199,6 +201,7 @@ done
 #####
 source ${_OPENSTACKRC}
 
+echo -e "\n${GREEN}${BOLD}Verifying Units Specific Characteristic${NC}${NORMAL}"
 for _UNITTOBEVALIDATED in "cms" "dsu" "lvu" "mau" "omu" "smu" "vm-asu"
 do
         _IMAGE=$(cat ${_ENV}|grep "$(echo "${_UNITTOBEVALIDATED}" | awk '{print tolower($0)}')_image"|grep -v -E "image_id|image_source|image_volume_size"|awk '{print $2}'|sed "s/\"//g")
@@ -212,6 +215,14 @@ do
         #####
         if [[ "${_SOURCE}" == "glance" ]]
         then
+                if $(cat ${_ENV}|awk '/'${_UNITTOBEVALIDATED}'_local_boot/ {print $2}'|awk '{print tolower($0)}')
+                then
+                        echo -e " - ${GREEN}The Unit ${_UNITTOBEVALIDATED} will boot from the local hypervisor disk (aka Ephemeral Disk)${NC}"
+                else
+                        echo -e " - ${GREEN}The Unit ${_UNITTOBEVALIDATED} will boot from Volume (aka from the SAN)${NC}"
+                fi
+
+                echo -e -n "   - Validating chosen Glance Image ${_IMAGE} ...\t"
 		_IMAGEID=$(glance image-list|awk '/ '${_IMAGE}' / {print $2}')
 		if (( "$( echo "${_IMAGEID}"|wc -l)" > "1" ))
 		then
@@ -220,27 +231,37 @@ do
 			exit_for_error "Error" true hard
 		elif [[ "${_IMAGEID}" == "" ]]
 		then
-                	exit_for_error "Error, Image for Unit ${_UNITTOBEVALIDATED} is not present or mismatch between ID and Name." true hard
+                	exit_for_error "Error, Image for Unit ${_UNITTOBEVALIDATED} is not present or it mismatches between ID and Name." true hard
 		fi
+		echo -e "${GREEN} [OK]${NC}"
+
         elif [[ "${_SOURCE}" == "cinder" ]]
         then
+                echo -e " - ${GREEN}The Unit ${_UNITTOBEVALIDATED} will boot from Volume (aka from the SAN)${NC}"
+
+                echo -e -n "   - Validating chosen Cinder Volume ${_VOLUMEID} ...\t\t\t\t"
 		_VOLUME_DETAILS=$(cinder show ${_VOLUMEID} 2>/dev/null)
 		if [[ "$?" != "0" ]]
 		then
 			exit_for_error "Error, Volume for Unit ${_UNITTOBEVALIDATED} not present." true hard
 		fi
+                echo -e "${GREEN} [OK]${NC}"
+
+		echo -e -n "   - Validating given volume size ...\t\t\t\t\t\t\t\t"
                 _VOLUME_SIZE=$(echo "${_VOLUME_DETAILS}"|awk '/ size / {print $4}'|sed "s/ //g")
                 _VOLUME_GIVEN_SIZE=$(cat ${_ENV}|awk '/'$(echo "${_UNITTOBEVALIDATED}" | awk '{print tolower($0)}')_volume_size'/ {print $2}'|sed "s/\"//g")
                 if (( "${_VOLUME_GIVEN_SIZE}" < "${_VOLUME_SIZE}" ))
                 then
                         exit_for_error "Error, Volume for Unit ${_UNITTOBEVALIDATED} with UUID ${_VOLUMEID} has a size of ${_VOLUME_SIZE} which cannot fit into the given input size of ${_VOLUME_GIVEN_SIZE}." true hard
                 fi
+		echo -e "${GREEN} [OK]${NC}"
 
                 #####
                 # Creating a test volume to verify that the snapshotting works
                 # https://wiki.openstack.org/wiki/CinderSupportMatrix
                 # e.g. Feature not available with standard NFS driver
                 #####
+		echo -e -n "   - Validating if volume cloning/snapshotting feature is available ...\t\t\t"
                 #####
                 # Creating a new volume from the given one
                 #####
@@ -255,6 +276,7 @@ do
                         if [[ "${_VOLUME_SOURCE_STATUS}" == "available" ]]
                         then
                                 cinder delete temp-${_VOLUMEID} >/dev/null 2>&1
+				echo -e "${GREEN} [OK]${NC}"
                                 break
                         elif [[ "${_VOLUME_SOURCE_STATUS}" == "error" ]]
                         then
@@ -269,10 +291,12 @@ do
         #####
         # Check the given flavor is available
         #####
+        echo -e -n "   - Validating chosen Flavor ${_FLAVOR} ...\t\t\t\t\t\t"
         nova flavor-show "${_FLAVOR}" >/dev/null 2>&1 || exit_for_error "Error, Flavor for Unit ${_UNITTOBEVALIDATED} not present." true hard
+        echo -e "${GREEN} [OK]${NC}"
 done
 
-#echo -e "\n${GREEN}${BOLD}Verifying Units CVS Files${NC}${NORMAL}"
+echo -e "\n${GREEN}${BOLD}Verifying Units CVS Files${NC}${NORMAL}"
 for _UNITTOBEVALIDATED in "cms" "dsu" "lvu" "mau" "omu" "smu" "vm-asu"
 do
         _CSVFILEPATH=${_ENVFOLDER}/${_UNITTOBEVALIDATED}
@@ -281,7 +305,7 @@ do
         _SIPCSVFILE=$(echo ${_CSVFILEPATH}/sip.csv)
         _MEDIACSVFILE=$(echo ${_CSVFILEPATH}/media.csv)
 
-        #echo -e " - $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }')"
+        echo -e " - $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }')"
         for _CSV in "${_ADMINCSVFILE}" "${_SZCSVFILE}" "${_SIPCSVFILE}" "${_MEDIACSVFILE}"
         do
                 #####
@@ -309,13 +333,13 @@ do
         done
 done
 
-#echo -e "\n${GREEN}${BOLD}Verifying OpenStack Neutron Network${NC}${NORMAL}"
+echo -e "\n${GREEN}${BOLD}Verifying OpenStack Neutron Network${NC}${NORMAL}"
 for _NETWORK in "admin" "sz" "sip" "media"
 do
         net_validation ${_NETWORK} $(echo ${_NETWORK}|awk '{ print toupper($0) }')
 done
 
-#echo -e "\n${GREEN}${BOLD}Verifying OpenStack Neutron Ports${NC}${NORMAL}"
+echo -e "\n${GREEN}${BOLD}Verifying OpenStack Neutron Ports${NC}${NORMAL}"
 _OLDIFS=$IFS
 IFS=","
 for _UNITTOBEVALIDATED in "cms" "dsu" "lvu" "mau" "omu" "smu" "vm-asu"
@@ -326,12 +350,12 @@ do
         _SIPCSVFILE=$(echo ${_CSVFILEPATH}/sip.csv)
         _MEDIACSVFILE=$(echo ${_CSVFILEPATH}/media.csv)
 
-        #echo -e " - $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }')"
+        echo -e " - $(echo ${_UNITTOBEVALIDATED}|awk '{ print toupper($0) }')"
         for _CSV in "${_ADMINCSVFILE}" "${_SZCSVFILE}" "${_SIPCSVFILE}" "${_MEDIACSVFILE}"
         do
                 if [[ "${_CSV}" =~ "admin.csv" ]]
                 then
-                        #echo -e "   - OpenStack Admin Neutron Ports"
+                        echo -e "   - OpenStack Admin Neutron Ports"
                         while read _PORTID _MAC _IP
                         do
                                 mac_validation ${_MAC}
@@ -342,7 +366,7 @@ do
 
                 if [[ "${_UNITTOBEVALIDATED}" != "mau" ]] && [[ "${_CSV}" =~ "sz.csv" ]]
                 then
-                        #echo -e "   - OpenStack Secure Zone Neutron Ports"
+                        echo -e "   - OpenStack Secure Zone Neutron Ports"
                         while read _PORTID _MAC _IP
                         do
                                 mac_validation ${_MAC}
@@ -353,7 +377,7 @@ do
 
                 if [[ "${_UNITTOBEVALIDATED}" == "cms" ]] && [[ "${_CSV}" =~ "sip.csv" ]]
                 then
-                        #echo -e "   - OpenStack SIP Neutron Ports"
+                        echo -e "   - OpenStack SIP Neutron Ports"
                         while read _PORTID _MAC _IP
                         do
                                 mac_validation ${_MAC}
@@ -364,7 +388,7 @@ do
 
                 if [[ "${_UNITTOBEVALIDATED}" == "cms" ]] && [[ "${_CSV}" =~ "media.csv" ]]
                 then
-                        #echo -e "   - OpenStack Media Neutron Ports"
+                        echo -e "   - OpenStack Media Neutron Ports"
                         while read _PORTID _MAC _IP
                         do
                                 mac_validation ${_MAC}
@@ -376,12 +400,15 @@ do
 done
 IFS=${_OLDIFS}
 
+echo -e "\n${GREEN}${BOLD}Verifying OpenStack Neutron Security Group${NC}${NORMAL}"
 for _NETWORK in "admin" "sz" "sip" "media"
 do
 	if $(cat ${_ENV}|awk '/'${_NETWORK}'_security_group_enabled/ {print tolower($2)}')
 	then
+		echo -e -n " - ${GREEN}Security Group for ${_NETWORK} network ...\t\t\t${NC}"
 		_SECGROUP=$(cat ${_ENV}|awk '/'${_NETWORK}'_security_group_name/ {print $2}')
 		neutron security-group-show ${_SECGROUP} >/dev/null 2>&1 || exit_for_error "Error, missing security group ${_SECGROUP} for network ${_NETWORK}" false hard
+		echo -e "${GREEN} [OK]${NC}"
 	fi
 done
 

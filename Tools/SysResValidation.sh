@@ -64,7 +64,7 @@ do
 			shift
 			;;
 		*)
-			echo "Unknown option $1 $2"
+                        echo -e "${RED}Unknown option $1 $2${NC}"
 			shift
 			;;
 	esac
